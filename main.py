@@ -4,6 +4,7 @@
 # https://www.sciencedirect.com/science/article/pii/0360835296000472
 
 import os
+import numpy as np
 
 import functions
 
@@ -38,20 +39,39 @@ for job in jobs:
 # 5) cross-over function
 # 6) mutation
 
-chromosome = [1, 1, 2, 2, 0, 2, 0, 0, 1] # functions.generate_chromosome(J, M)
-print(f"chromosome: {chromosome}")
+# chromosome = [1, 1, 2, 2, 0, 2, 0, 0, 1] # functions.generate_chromosome(J, M)
+# print(f"chromosome: {chromosome}")
 
-fit = functions.fitness(J, M, chromosome, jobs)
-print(fit)
+# fit = functions.fitness(J, M, chromosome, jobs)
+# print(fit)
 
 
+print(f"========= ALGORITHM ==========")
 # algorithm
-POPULATION_SIZE = 20
+POPULATION_SIZE = 6
 GENERATIONS_NUM = 20
-P = [functions.generate_chromosome(J, M) for _ in range(20)]
-P_fitness = [functions.fitness(J, M, p, jobs) for p in P]
+if POPULATION_SIZE % 2 != 0:
+    raise Exception("POPULATION_SIZE has to be even number!")
+P = [functions.generate_chromosome(J, M) for _ in range(POPULATION_SIZE)]
 # for p in P:
-#     fit = functions.fitness(J, M, p, jobs)
-#     print(f"{p} -> {fit}")
+#     print(p)
+P_fitness = [functions.fitness(J, M, p, jobs) for p in P]
+# print(P_fitness)
+current_best = P[np.array(P_fitness).argmin()]
+# print(current_best)
 for generation in range(GENERATIONS_NUM):
     P_prime = []
+    for _ in range(POPULATION_SIZE / 2):   # random pairs? Every pair is removed from P from which those pairs are generated?
+        # TODO selection
+        c1, c2 = functions.selection()
+        c1_prime, c2_prime = functions.crossover(J, M, c1 , c2)
+        c1_mutated, c2_mutated = functions.mutation(J, M, c1_prime), functions.mutation(J, M, c2_prime)
+        P_prime += [c1_mutated, c2_mutated]
+    # TODO elitism - the P' is now of the same size as the P, so the P' is extended, or the worst chromosome in P' is replaced?
+    P = P_prime
+    P_fitness = [functions.fitness(J, M, p, jobs) for p in P]
+    generation_best = P[np.array(P_fitness).argmin()]
+    current_best = generation_best if generation_best <= current_best else current_best
+    # we should implement 2 mutations, selections and crossovers for ONE chromosome representation?
+    # Or do we have to come up with two different chromosome (problem) representations and implement
+    # those three functions for those specific representations?
