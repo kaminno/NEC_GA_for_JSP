@@ -1,3 +1,4 @@
+import random
 import numpy as np
 
 # use job-based representation; each number refers to the job and the occurence equals the order (2nd occurence means the second task etc)
@@ -45,3 +46,36 @@ def fitness(J, M, chromosome, jobs):
     # print(f"ending times: {schedule.times}")
     
     return np.max(schedule.times)
+
+def crossover(J, M, parent_1, parent_2):
+    # generate random crossover index
+    cross_index = random.randrange(0, J*M)
+
+    # split both parents on the index and copy the first part to their children
+    child_1, child_2 = parent_1[0:cross_index], parent_2[0:cross_index]
+
+    # store parent's remaining gens (and copy the list begining to make further operations easier)
+    remaining_gens_1, remaining_gens_2 = parent_1[cross_index:] + parent_1[0:cross_index], parent_2[cross_index:] + parent_2[0:cross_index]
+
+    # complete both children
+    for gen in remaining_gens_2:
+        child_1 += [gen] if child_1.count(gen) < M else []
+    
+    for gen in remaining_gens_1:
+        child_2 += [gen] if child_2.count(gen) < M else []
+
+    return child_1, child_2
+
+def mutation(J, M, chromosome_1):
+    # generate random two indices
+    m1, m2 = random.randrange(0, J*M), random.randrange(0, J*M)
+
+    # swap gen on those indices
+    tmp = chromosome_1[m1]
+    chromosome_1[m1] = chromosome_1[m2]
+    chromosome_1[m2] = tmp
+
+    return chromosome_1
+
+def selection():
+    return 1, 2
