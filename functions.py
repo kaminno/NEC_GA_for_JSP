@@ -43,7 +43,6 @@ def crossover(J, M, parent_1, parent_2, method="o"):
 def _one_point_crossover(J, M, parent_1, parent_2):
     # generate random crossover index
     cross_index = random.randrange(0, J*M)
-    # print(f"\tcross-over index: {cross_index} / {J*M}, ")
 
     # split both parents on the index and copy the first part to their children
     child_1, child_2 = parent_1[0:cross_index], parent_2[0:cross_index]
@@ -61,6 +60,7 @@ def _one_point_crossover(J, M, parent_1, parent_2):
     return child_1, child_2
 
 def _two_points_crossover(J, M, parent_1, parent_2):
+    # TODO
     print(f"Original chromosomes")
     print(parent_1)
     print(parent_2)
@@ -129,7 +129,7 @@ def _random_permutation(J, M, chromosome, probability):
     # random pairs of genes are selected, each gen exactly once and with some probability they are swaped
 
     indices = [i for i in range(J*M)]
-    for pair in range(int(J*M / 2)):
+    for _ in range(int(J*M / 2)):
         # randomly choose two gens which were not selected yet
         gen_1 = indices[random.randrange(0, len(indices))]
         indices.remove(gen_1)
@@ -145,7 +145,6 @@ def _random_permutation(J, M, chromosome, probability):
 
     return chromosome
 
-
 def selection(J, M, P, jobs, method="r", n=2):
     if method == "r":
         return _rank_selection(J, M, P, jobs)
@@ -155,36 +154,30 @@ def selection(J, M, P, jobs, method="r", n=2):
         raise Exception("invalid selection method! @method parameter has to be from {'r', 't'}.")
 
 def _rank_selection(J, M, P, jobs):
-    # TODO check the correctness!
+    P_fitness = [fitness(J, M, p, jobs) for p in P]
 
     # sort the population by fitness
-    P_fitness = [fitness(J, M, p, jobs) for p in P]
-    # print(P_fitness)
-
     sorted_fitness = copy.copy(P_fitness)
     sorted_fitness.sort(reverse=True)
-    # print(sorted_fitness)
 
+    # assign ranks
     ranks = [i + 1 for i in range(len(sorted_fitness))]
-    # print(ranks)
 
     total_rank = np.array(ranks).sum()
-    # print(total_rank)
 
-    generated_rank = random.randrange(1, total_rank)
-    # print(generated_rank)
+    generated_value = random.randrange(1, total_rank)
 
     rank = 0
     for i in range(len(ranks)):
         rank += ranks[i]
-        # print(f"i: {i}, rank: {rank}")
-        if rank - generated_rank > 0:
+        
+        # if the number is in the correct range, get the fitness
+        if rank - generated_value > 0:
             fitness_value = sorted_fitness[i]
             index = i
-            # print(f"fitness: {fitness_value}")
             break
     
-    # if there are more values of the same fitness
+    # if there are more values of the same fitness, keeps the order. If the 2nd occurence was selected previously, 2nd chromosome of same fitness should be picked.
     fitness_count = sorted_fitness.count(fitness_value)
     if fitness_count > 1:
         first_index = sorted_fitness.index(fitness_value)
@@ -201,16 +194,19 @@ def _rank_selection(J, M, P, jobs):
         final_index = index
 
     return P[final_index]
-    # raise Exception("_rank_selection() method is not implemented yet, try another option.")
 
 def _tournament_selection(J, M, P, jobs, n=2):
+    # evaluate the population
     P_fitness = [fitness(J, M, p, jobs) for p in P]
     participants = []
+
+    # choose n random indices (no duplicates are allowed)
     while len(participants) != n:
         participant = random.randrange(0, len(P))
         if participants.count(participant) == 0:
             participants.append(participant)
 
+    # find chromosome with the best fitness
     idx = None
     current_winner = np.inf
     for participant in participants:
@@ -222,25 +218,17 @@ def _tournament_selection(J, M, P, jobs, n=2):
 
     return winner
 
-
-
-
-
-
 def pick_neighbor(J, M, chromosome, n=1):
-    # TODO define N(x, y)
     while n != 0:
+        # generate random positions
         i1 = random.randrange(0, len(chromosome))
         i2 = random.randrange(0, len(chromosome))
-        # if chromosome[i1] != chromosome[i2]:
+
+        # swap values
         tmp = chromosome[i1]
         chromosome[i1] = chromosome[i2]
         chromosome[i2] = tmp
+
         n -= 1
 
-    # return generate_chromosome(J, M)
     return chromosome
-
-def E(fitness, reference):
-    return fitness/reference
-
