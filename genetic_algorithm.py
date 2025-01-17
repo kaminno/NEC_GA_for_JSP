@@ -14,7 +14,7 @@ import functions
 
 # load data relatively to the current directory
 current_path = os.getcwd()
-instance_path = os.path.join(current_path, "instances/instance_1.txt")
+instance_path = os.path.join(current_path, "instances/instance_3.txt")
 
 # load the problem instance
 jobs = []
@@ -30,26 +30,14 @@ with open(instance_path, "r") as file:
         jobs.append(job)
 
 print(f"J: {J}, M: {M}")
-for job in jobs:
-    print(job)
-
-# prepare the GA
-# 1) generate genom
-# 2) generate population (list of genoms?) of some size
-# 3) fitness function
-# 4) selection function?
-# 5) cross-over function
-# 6) mutation
-
-# ch1 = [1, 2, 3, 1, 2, 3]
-# ch2 = [1, 3, 2, 1, 2, 3]
-# functions.crossover(2, 3, ch1, ch2, "t")
-
-# raise Exception(f"In dev")
+# for job in jobs:
+#     print(job)
 
 print(f"========= GENETIC ALGORITHM ==========")
-POPULATION_SIZE = 50
-GENERATIONS_NUM = 500
+ga_start = time.time()
+
+POPULATION_SIZE = 100
+GENERATIONS_NUM = 400
 if POPULATION_SIZE % 2 != 0:
     raise Exception("POPULATION_SIZE has to be even number!")
 
@@ -66,8 +54,6 @@ for generation in range(GENERATIONS_NUM):
     start = time.time()
 
     P_prime = []
-    # print(f"----------------\ngeneration: {generation}, ", end="")
-    # print(f"generation: {generation}, ", end="")
     for _ in range(int(POPULATION_SIZE / 2)):
         # selection
         # c1 = functions.selection(J, M, P, jobs, "r")
@@ -77,13 +63,16 @@ for generation in range(GENERATIONS_NUM):
         c2 = functions.selection(J, M, P, jobs, "t", 10)
 
         # cross-over
-        c1_prime, c2_prime = functions.crossover(J, M, c1 , c2)
+        # c1_prime, c2_prime = functions.crossover(J, M, c1 , c2)
+        c1_prime, c2_prime = functions.crossover(J, M, c1 , c2, "t")
 
         # mutation
-        c1_mutated, c2_mutated = functions.mutation(J, M, c1_prime), functions.mutation(J, M, c2_prime)
-        # c1_mutated, c2_mutated = functions.mutation(J, M, c1_prime, "r", 0.1), functions.mutation(J, M, c2_prime, "r", 0.1)
+        # c1_mutated, c2_mutated = functions.mutation(J, M, c1_prime), functions.mutation(J, M, c2_prime)
+        c1_mutated, c2_mutated = functions.mutation(J, M, c1_prime, "r", 0.1), functions.mutation(J, M, c2_prime, "r", 0.1)
+
         P_prime += [c1_mutated, c2_mutated]
-    # TODO elitism - the P' is now of the same size as the P, so the P' is extended, or the worst chromosome in P' is replaced?
+
+    # TODO elitism?
     P = P_prime
     P_fitness = [functions.fitness(J, M, p, jobs) for p in P]
 
@@ -96,4 +85,5 @@ for generation in range(GENERATIONS_NUM):
     
     end = time.time()
 
-    # print(f"best value: {best_value}, time: {(end - start):.2f} s")
+ga_end = time.time()
+print(f"Solution: {best_value} after {(ga_end - ga_start)/60:.2f} m")

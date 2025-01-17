@@ -1,10 +1,3 @@
-# some inspiration taken from:
-# https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=4f12bb2e8cdb0fd339b87f7c74234ea61b17d2d4
-# https://www.kecl.ntt.co.jp/icl/as/members/yamada/ICGA91.PDF
-# https://www.sciencedirect.com/science/article/pii/0360835296000472
-# https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7154916
-# https://www.sciencedirect.com/science/article/pii/S0957417420302050
-
 import os
 import time
 import random
@@ -14,7 +7,7 @@ import functions
 
 # load data relatively to the current directory
 current_path = os.getcwd()
-instance_path = os.path.join(current_path, "instances/instance_1.txt")
+instance_path = os.path.join(current_path, "instances/instance_3.txt")
 
 # load the problem instance
 jobs = []
@@ -29,7 +22,7 @@ with open(instance_path, "r") as file:
             i += 1
         jobs.append(job)
 
-# print(f"J: {J}, M: {M}")
+print(f"J: {J}, M: {M}")
 # for job in jobs:
 #     print(job)
 
@@ -50,7 +43,7 @@ best_solution = s_fitness
 
 for i in range(I):
     # pick and evaluate new state
-    s_prime = functions.pick_neighbor(J, M, s, n=10)
+    s_prime = functions.pick_neighbor(J, M, s, n=50)
     s_prime_fitness = functions.fitness(J, M, s_prime, jobs)
 
     # if it is better, keep it

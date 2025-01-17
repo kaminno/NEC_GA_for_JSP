@@ -18,12 +18,13 @@ class Schedule:
     
     def add(self, job, machine, process_time):
         machine_free_time = self.timetable[machine][-1][3] if len(self.timetable[machine]) > 0 else 0
-        start_time = max(self.times[job], machine_free_time)
+        start_time = max(self.times[job], machine_free_time) # task start time in the schedule
         self.times[job] = start_time + process_time
         self.timetable[machine].append((job, start_time, process_time, self.times[job]))
 
 def fitness(J, M, chromosome, jobs):
     schedule = Schedule(J, M)
+    # maintain number of processed tasks for each job
     order = [0 for _ in range(J)]
     for gen in chromosome:
         idx = order[gen]
@@ -60,51 +61,60 @@ def _one_point_crossover(J, M, parent_1, parent_2):
     return child_1, child_2
 
 def _two_points_crossover(J, M, parent_1, parent_2):
-    # TODO
-    print(f"Original chromosomes")
-    print(parent_1)
-    print(parent_2)
-    # cross_index_1 = random.randrange(0, J*M)
-    # cross_index_2 = random.randrange(0, J*M)
-    cross_index_1 = 2
-    cross_index_2 = 5
-    print(f"Crossing interval")
-    print(cross_index_1)
-    print(cross_index_2)
+    children_1 = parent_1.copy()
+    children_2 = parent_2.copy()
 
+    # generate positions
+    c1 = random.randrange(0, J*M)
+    c2 = random.randrange(0, J*M)
+    cross_index_1 = min(c1, c2)
+    cross_index_2 = max(c1, c2)
+
+    # get parts to swap
     cross_part_1 = parent_1[cross_index_1: cross_index_2]
     cross_part_2 = parent_2[cross_index_1: cross_index_2]
-    print("Crossing parts")
-    print(cross_part_1)
-    print(cross_part_2)
 
-    parent_1[cross_index_1 : cross_index_2] = cross_part_2
-    parent_2[cross_index_1 : cross_index_2] = cross_part_1
-    print("Parts crossed")
-    print(parent_1)
-    print(parent_2)
+    # swap parts
+    children_1[cross_index_1 : cross_index_2] = cross_part_2
+    children_2[cross_index_1 : cross_index_2] = cross_part_1
 
+    # check if both parts contains same number of same gens
+    gen_count = parent_1.count(parent_1[0])
     for i in range(len(cross_part_1)):
-        # if jobs are different, find random corresponding number and swap it
-        if cross_part_1[i] != cross_part_2[i]:
-            occurance_to_swap_1 = random.randrange(0, M) + 1
-            occurance_to_swap_2 = occurance_to_swap_1
-            for j in range(len(parent_1)):
-                if parent_1[j] == cross_part_2[i]:
-                    occurance_to_swap_1 -= 1
-                if parent_2[j] == cross_part_1[i]:
-                    occurance_to_swap_2 -= 1
-                if occurance_to_swap_1 == 0:
-                    parent_1[j] = cross_part_2[i]
-                if occurance_to_swap_2 == 0:
-                    parent_2[j] = cross_part_1[i]
-                if occurance_to_swap_1 == occurance_to_swap_2:
-                    break
-    
-    print("Corrected children")
-    print(parent_1)
-    print(parent_2)
-    return parent_1, parent_2
+        idx = cross_index_1 + i
+        gen1 = children_1[idx]
+        gen2 = children_2[idx]
+        # if not, correct them. Each first occurence of overpresented gen is replaced by gen which is missing
+        if gen1 != gen2:
+            # find gen with wrong number of occurences
+            if children_1.count(gen1) != gen_count:
+                # solve bigger occurences
+                if children_1.count(gen1) > gen_count:
+                    for j in range(J):
+                        if children_1.count(j) < gen_count:
+                            children_1[children_1.index(gen1)] = j
+                            break
+                # solve smaller occurences
+                elif children_1.count(gen1) < gen_count:
+                    for j in range(J):
+                        if children_1.count(j) > gen_count:
+                            children_1[children_1.index(j)] = gen1
+                            break
+
+            # control the second chromosome
+            if children_2.count(gen2) != gen_count:
+                if children_2.count(gen2) > gen_count:
+                    for j in range(J):
+                        if children_2.count(j) < gen_count:
+                            children_2[children_2.index(gen2)] = j
+                            break
+                elif children_2.count(gen2) < gen_count:
+                    for j in range(J):
+                        if children_2.count(j) > gen_count:
+                            children_2[children_2.index(j)] = gen2
+                            break
+
+    return children_1, children_2
 
 def mutation(J, M, chromosome, method="o", probability=0.5):
     if method == "o":
